@@ -6,10 +6,25 @@ from dataclasses import dataclass
 class Range:
     start: int
     end: int
+
+    @property
+    def length(self) -> int:
+        return self.end - self.start + 1
     
     def __repr__(self) -> str:
         return f"[{self.start}, {self.end}]"
     
+    def check_overlap(self, other: Range) -> bool:
+        return (
+            other.start <= self.start <= other.end
+            or other.start <= self.end <= other.end
+        )
+    
+    def merge(self, other: Range) -> Range:
+        return Range(
+            min(self.start, other.start),
+            max(self.end, other.end)
+        )
 
 def check_if_ingredient_is_fresh(ranges: List[Range], ingredient: int) -> bool:
     for r in ranges:
@@ -33,17 +48,32 @@ def solve_day_5():
                     ranges.append(Range(*[int(x) for x in _line.split("-")]))
             else:
                 ingedients.append(int(_line))
-        
-    print(f"{ranges=}")
-    print(f"{ingedients=}")
 
     fresh_ingredients = []
     for i in ingedients:
         if check_if_ingredient_is_fresh(ranges, i):
             fresh_ingredients.append(i)
 
-    print(f"{fresh_ingredients=}")
     print(f"{len(fresh_ingredients)=}")
+
+    found_overlap = True
+    while found_overlap:
+        found_overlap = False
+
+        ranges = sorted(ranges, key=lambda x: (x.start, x.end))
+
+        disjunct_ranges = ranges[:1]
+        for r in ranges[1:]:
+            _last_range = disjunct_ranges[-1]
+            if r.check_overlap(_last_range):
+                disjunct_ranges[-1] = _last_range.merge(r)
+                found_overlap = True
+            else:
+                disjunct_ranges += [r]
+        
+        ranges = disjunct_ranges.copy()
+
+    print(f"{sum([r.length for r in disjunct_ranges])=}")
 
 
 if __name__ == "__main__":
