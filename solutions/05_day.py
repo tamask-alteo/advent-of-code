@@ -33,6 +33,25 @@ def check_if_ingredient_is_fresh(ranges: List[Range], ingredient: int) -> bool:
         
     return False
 
+def find_disjunct_ranges(ranges: List[Range]) -> List[Range]:
+    found_overlap = False
+
+    ranges = sorted(ranges, key=lambda x: (x.start, x.end))
+
+    disjunct_ranges = ranges[:1]
+    for r in ranges[1:]:
+        _last_range = disjunct_ranges[-1]
+        if r.check_overlap(_last_range):
+            disjunct_ranges[-1] = _last_range.merge(r)
+            found_overlap = True
+        else:
+            disjunct_ranges += [r]
+
+    if found_overlap:
+        find_disjunct_ranges(disjunct_ranges)
+
+    return disjunct_ranges
+
 
 def solve_day_5():
     with open("inputs/05_input.txt", "r") as f:
@@ -56,23 +75,7 @@ def solve_day_5():
 
     print(f"{len(fresh_ingredients)=}")
 
-    found_overlap = True
-    while found_overlap:
-        found_overlap = False
-
-        ranges = sorted(ranges, key=lambda x: (x.start, x.end))
-
-        disjunct_ranges = ranges[:1]
-        for r in ranges[1:]:
-            _last_range = disjunct_ranges[-1]
-            if r.check_overlap(_last_range):
-                disjunct_ranges[-1] = _last_range.merge(r)
-                found_overlap = True
-            else:
-                disjunct_ranges += [r]
-        
-        ranges = disjunct_ranges.copy()
-
+    disjunct_ranges = find_disjunct_ranges(ranges)
     print(f"{sum([r.length for r in disjunct_ranges])=}")
 
 
