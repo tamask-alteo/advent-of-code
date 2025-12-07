@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Tuple
+from collections import Counter
 
 
 @dataclass(frozen=True, slots=True)
 class Beams:
-    data: List[int]
+    data: List[Beam]
 
     def __repr__(self):
         return str(self.data)
@@ -13,17 +14,26 @@ class Beams:
         new_beams = []
         split_cnt = 0
         for beam in self.data:
-            if beam in splits.list_splits():
-                new_beams += [beam - 1, beam + 1]
+            if beam.position in splits.list_splits():
+                new_beams += [
+                    Beam(beam.position - 1, beam.path_count),
+                    Beam(beam.position + 1, beam.path_count)
+                ]
                 split_cnt += 1
             else:
                 new_beams += [beam]
 
-        new_beams = list(set(new_beams))
-        new_beams.sort()
+        totals = Counter()
+        for beam in new_beams:
+            totals[beam.position] += beam.path_count
+        unique_beams = [Beam(pos, count) for pos, count in totals.items()]
 
-        return (Beams(new_beams), split_cnt)
+        return (Beams(unique_beams), split_cnt)
 
+@dataclass(frozen=True, slots=True)
+class Beam:
+    position: int
+    path_count: int = 1
 
 @dataclass(frozen=True, slots=True)
 class Splits:
@@ -40,9 +50,9 @@ def solve_day_7():
     with open("inputs/07_input.txt", "r") as f:
         lines = [line.strip() for line in f.readlines()]
 
-    start = lines[0].find("S")
+    starting_beam = Beam(lines[0].find("S"), path_count=1)
 
-    beams = Beams([start])
+    beams = Beams([starting_beam])
     manifold = [[i for i, ch in enumerate(line) if ch == "^"] for line in lines[1:-1]]
     manifold = [Splits(x) for x in manifold if len(x) > 0]
 
@@ -52,6 +62,7 @@ def solve_day_7():
         total_split_count += split_cnt
 
     print(f"{total_split_count=}")
+    print(f"{sum([b.path_count for b in beams.data])=}")
 
 
 if __name__ == "__main__":
