@@ -24,6 +24,35 @@ def solve_day_11():
 
     print(f"{cntr=}")
 
-    
+    # (path, visited_dac, visited_fft): num_paths
+    positions = {("svr", False, False): 1}
+    cntr = 0
+    total = 0
+
+    while len(positions.keys()) > 0:
+        _positions = {}
+        for position, num_paths in positions.items():
+            path, visited_dac, visited_fft = position
+            if path == "dac":
+                visited_dac = True
+            if path == "fft":
+                visited_fft = True   
+            outputs = devices[path]
+            for output in outputs:
+                key = (output, visited_dac, visited_fft)
+                if output == "out":
+                    total += num_paths
+                    if visited_dac and visited_fft:
+                        cntr += num_paths
+                elif key not in _positions:
+                    _positions[key] = num_paths
+                else:
+                    _positions[key] += num_paths
+
+        positions = _positions
+
+    print(f"{cntr=}, {total=}")
+
+
 if __name__ == "__main__":
     solve_day_11()
